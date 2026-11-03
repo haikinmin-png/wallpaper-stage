@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>wallpaper-stage template</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #stage-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #hotspot-layer { position: fixed; inset: 0; }
+  .hotspot { position: absolute; cursor: pointer; }
+  #chat-bar {
+    position: fixed; left: 50%; bottom: 4vh; transform: translateX(-50%);
+    display: none; gap: 8px; padding: 10px 12px; border-radius: 14px;
+    background: rgba(20, 20, 24, 0.72); backdrop-filter: blur(8px);
+  }
+  #chat-bar.open { display: flex; }
+  #chat-bar input {
+    width: 46vw; max-width: 520px; border: 0; border-radius: 8px;
+    padding: 8px 10px; font-size: 15px; outline: none;
+  }
+</style>
+</head>
+<body>
+<video id="stage-video" autoplay muted playsinline></video>
+<div id="hotspot-layer"></div>
+<form id="chat-bar"><input id="chat-input" placeholder="Say something…" autocomplete="off" /></form>
+
+<script type="module">
+  // NOTE: plain <video> wallpapers in Lively receive no mouse events.
+  // This template is an HTML wallpaper, which is what makes clicks work.
+  import { Stage, createHotspots } from './stage.mjs';
+
+  const stage = new Stage({
+    idleClips: ['clips/idle-blink.mp4', 'clips/idle-breathe.mp4', 'clips/idle-smile.mp4'],
+    reactions: { pat: 'clips/react-pat.mp4', poke: 'clips/react-poke.mp4', chat: 'clips/react-talk.mp4' },
+  });
+
+  const video = document.getElementById('stage-video');
+  const play = (src) => { video.src = src; video.loop = stage.mode === 'idle'; video.play(); };
+  play(stage.currentClip());
+  video.addEventListener('ended', () => play(stage.advance()));
+  // Idle loops are seamless: loop them natively, rotate on a timer instead.
+  setInterval(() => { if (stage.mode === 'idle') play(stage.advance()); }, 20000);
+
+  const hotspots = createHotspots([
+    { id: 'face', x: 0.40, y: 0.05, w: 0.20, h: 0.25, action: 'pat' },
+    { id: 'body', x: 0.30, y: 0.30, w: 0.40, h: 0.60, action: 'poke' },
+  ]);
+  const layer = document.getElementById('hotspot-layer');
+  for (const h of hotspots.all()) {
+    const el = document.createElement('div');
+    el.className = 'hotspot';
+    el.style.cssText = `left:${h.x * 100}%;top:${h.y * 100}%;width:${h.w * 100}%;height:${h.h * 100}%`;
+    el.addEventListener('click', () => { if (stage.react(h.action)) play(stage.currentClip()); });
+    layer.appendChild(el);
+  }
+
+  // Double-click the body hotspot area toggles the chat bar.
+  layer.addEventListener('dblclick', () => {
+    document.getElementById('chat-bar').classList.toggle('open');
+    document.getElementById('chat-input').focus();
+  });
+  document.getElementById('chat-bar').addEventListener('submit', (e) => {
+    e.preventDefault();
+    // Wire this to your dialogue backend / TTS; the talk reaction is the visual half.
+    if (stage.react('chat')) play(stage.currentClip());
+    e.target.reset();
+  });
+</script>
+</body>
+</html>
