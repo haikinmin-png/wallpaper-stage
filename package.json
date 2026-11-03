@@ -1,0 +1,11 @@
+{
+  "name": "wallpaper-stage",
+  "version": "0.1.0",
+  "description": "A stage for living desktop characters: seamless idle-loop scheduling, one-shot reaction clips, and click hotspots for interactive HTML wallpapers (Lively Wallpaper). Pure-logic core, unit-tested, with a drop-in wallpaper template.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=18" },
+  "keywords": ["lively-wallpaper", "interactive-wallpaper", "desktop-companion", "virtual-character", "video-loops", "hotspots"],
+  "license": "MIT"
+}
